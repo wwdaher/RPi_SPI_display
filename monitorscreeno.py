@@ -7,7 +7,7 @@ import digitalio
 import board
 from PIL import Image, ImageDraw, ImageFont, ImageColor, ImageShow
 from adafruit_rgb_display import ili9341
-from time import sleep
+from time import sleep, time_ns
 import psutil
 import mygauges
 import math
@@ -59,6 +59,42 @@ def getIPAddrs():
 #            print(ifaceName + ": " + " ".join(addresses))
             IPAddrs += ifaceName + ": " + " ".join(addresses) + ", "
     return IPAddrs[:-2]
+
+NET_MAXBYTES_PER_SECOND = 30000000     # 30Mb/sec
+DISK_MAXBYTES_PER_SECOND = 30000000    # 30Mb/sec
+prev_net_bytes = 0
+prev_net_time = time_ns()
+prev_disk_bytes = 0
+net_percent = 0
+disk_percent = 0
+def calcIO():
+    global prev_net_bytes, prev_disk_bytes, prev_net_time, net_percent, disk_percent
+    global NET_MAXBYTES_PER_SECOND, DISK_MAXBYTES_PER_SECOND
+    now = time_ns()
+    elapsed = (now - prev_net_time) / 1000000000  # in seconds
+#    print("elapsed: " + str(elapsed))
+    prev_net_time = now
+    net_bytes = psutil.net_io_counters().bytes_sent + psutil.net_io_counters().bytes_recv
+    net_rw = net_bytes - prev_net_bytes
+    prev_net_bytes = net_bytes
+
+    net_percent = int(((net_rw / elapsed) / NET_MAXBYTES_PER_SECOND ) * 100)
+    if net_percent > 100:
+        net_percent = 100
+
+    disk_bytes = psutil.disk_io_counters().read_bytes + psutil.disk_io_counters().write_bytes
+#    print( psutil.disk_io_counters().read_bytes,  psutil.disk_io_counters().write_bytes)
+    disk_rw = disk_bytes - prev_disk_bytes
+    prev_disk_bytes = disk_bytes
+
+    disk_percent = int(((disk_rw / elapsed) / DISK_MAXBYTES_PER_SECOND) * 100)
+    if disk_percent > 100:
+        disk_percent = 100
+
+#    print('net : ' + str(net_rw) + '  disk : ' + str(disk_rw))
+#    print('net %: ' + str(net_percent) + '  disk %: ' + str(disk_percent))
+
+
 
 
 # Configuration for CS and DC pins (these are PiTFT defaults):
@@ -258,9 +294,10 @@ while 1:
     tempg.set_percent(math.trunc(cpu_temp.current))
     tempg.set_text(str(math.trunc(cpu_temp.current))+"°C")
 
-    networkio = randrange(100)
-    diskio = randrange(100)
-    iobc.set_percent((networkio, diskio))
+    calcIO()
+#    networkio = randrange(100)
+#    diskio = randrange(100)
+    iobc.set_percent((net_percent, disk_percent))
 
     cpupercent = psutil.cpu_percent(interval=updatefrequency) 
 #    cpupercent = randrange(100) 
