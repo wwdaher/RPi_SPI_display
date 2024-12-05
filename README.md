@@ -13,23 +13,25 @@ is in mygaugeso.py.
 Ensure that SPI is enabled in raspi-config.
 
 Pin Configuration:
-Screen 		GPIO
-VCC		5VO		2
-GND		GND		6
-CS		GPIO8 (CEO)	24
-RESET		GPIO24		18
-D/C		GPIO25		22
-SDI((MOSI)	GPIO10 (MOSI)	19
-SCK		GPIO11 (SCLK)	23
-LED		3.5V power	1
-SDO(MISO)	GPIO9 (MISO)	21
+
+|Screen |GPIO | RPi pin |
+|-------|-----|---------|
+|VCC | 5VO | 2 |
+|GND | GND | 6 |
+|CS | GPIO8 (CEO) | 24 |
+|RESET | GPIO24 | 18 |
+|D/C | GPIO25 | 22 |
+|SDI((MOSI) | GPIO10 (MOSI) | 19 |
+|SCK | GPIO11 (SCLK) | 23 |
+|LED | 3.5V power | 1 |
+|SDO(MISO) | GPIO9 (MISO) | 21 |
 
 For touch functionality:
 Add to /boot/firmware/config.txt: dtoverlay=spi1-1cs
-T_CLK		GPIO21		40
-T_CS		GPIO18		12
-T_DIN		GPIO20		38
-T_DO		GPIO19		35
-T_IRQ		GPIO26		37
+|T_CLK | GPIO21 | 40 |
+|T_CS | GPIO18 | 12 |
+|T_DIN | GPIO20 | 38 |
+|T_DO | GPIO19 | 35 | 
+|T_IRQ | GPIO26 | 37 |
 
 
