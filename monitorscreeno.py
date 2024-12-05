@@ -13,23 +13,20 @@
 #	1.0	2024/12/03	add monitorscreeno.ini support
 # 	
 #---------------------------------------------------------------------
-import socket
-from netifaces import interfaces, ifaddresses, AF_INET
-import digitalio
-import board
+import psutil, math, configparser, sys
+from random import randrange
+from time import sleep, time_ns
+
+import digitalio, board, busio
 from PIL import Image, ImageDraw, ImageFont, ImageColor, ImageShow
 from adafruit_rgb_display import ili9341
-from time import sleep, time_ns
-import psutil
-import mygauges
-import math
-import busio
 from xpt2046 import Touch
 from gpiozero import Button, DigitalOutputDevice
+
+import socket
+from netifaces import interfaces, ifaddresses, AF_INET
+
 from mygaugeso import Bar, TextBox, Dial, Gauge, BarMulti
-from random import randrange
-import configparser
-import sys
 
 #---------------------------------------------------------------------
 # read the config file
@@ -74,7 +71,6 @@ def getIPAddrs():
                 i["addr"]
                 for i in ifaddresses(ifaceName).setdefault(AF_INET, [{"addr": "No IP"}])
             ]
-#            print(ifaceName + ": " + " ".join(addresses))
             IPAddrs += ifaceName + ": " + " ".join(addresses) + ", "
     return IPAddrs[:-2]
 
@@ -91,7 +87,6 @@ def calcIO():
     global NET_MAXBYTES_PER_SECOND, DISK_MAXBYTES_PER_SECOND
     now = time_ns()
     elapsed = (now - prev_net_time) / 1000000000  # in seconds
-#    print("elapsed: " + str(elapsed))
     prev_net_time = now
     net_bytes = psutil.net_io_counters().bytes_sent + psutil.net_io_counters().bytes_recv
     net_rw = net_bytes - prev_net_bytes
@@ -102,7 +97,6 @@ def calcIO():
         net_percent = 100
 
     disk_bytes = psutil.disk_io_counters().read_bytes + psutil.disk_io_counters().write_bytes
-#    print( psutil.disk_io_counters().read_bytes,  psutil.disk_io_counters().write_bytes)
     disk_rw = disk_bytes - prev_disk_bytes
     prev_disk_bytes = disk_bytes
 
@@ -110,10 +104,24 @@ def calcIO():
     if disk_percent > 100:
         disk_percent = 100
 
-#    print('net : ' + str(net_rw) + '  disk : ' + str(disk_rw))
-#    print('net %: ' + str(net_percent) + '  disk %: ' + str(disk_percent))
 
+#---------------------------------------------------------------------
+#fill entire screen with background
+#---------------------------------------------------------------------
+def show_background():
+	if SCREENBACKGROUNDIMAGE != '':
+		image = Image.open(SCREENBACKGROUNDIMAGE)
+		disp.image(image)
+	else:
 
+		image = Image.new("RGBA", (width, height))
+		# Get drawing object to draw on image.
+		draw = ImageDraw.Draw(image)
+
+		draw.rectangle(xy = (0, 0, width, height),
+               		fill=SCREENBACKGROUNDCOLOR
+               	)
+	return(image)
 
 
 #---------------------------------------------------------------------
@@ -127,7 +135,6 @@ reset_pin = digitalio.DigitalInOut(board.D24)
 # Setup SPI bus using hardware SPI:
 spi = board.SPI()
 
-# pylint: disable=line-too-long
 # Create the display:
 disp = ili9341.ILI9341(
     spi,
@@ -137,7 +144,6 @@ disp = ili9341.ILI9341(
     rst=reset_pin,
     baudrate=BAUDRATE,
 )
-# pylint: enable=line-too-long
 
 # Create blank image for drawing.
 # Make sure to create image with mode 'RGB' for full color.
@@ -184,48 +190,47 @@ xpt = Touch(spi, cs=cs, int_pin=irq, int_handler=touchscreen_press)
 # end of touch stuff
 #---------------------------------------------------------------------
 
-#---------------------------------------------------------------------
-
-#fill entire screen with background
-#image = Image.open('roundlines.png')
-if SCREENBACKGROUNDIMAGE != '':
-	image = Image.open(SCREENBACKGROUNDIMAGE)
-	disp.image(image)
-else:
-
-	image = Image.new("RGBA", (width, height))
-	# Get drawing object to draw on image.
-	draw = ImageDraw.Draw(image)
-
-	draw.rectangle(xy = (0, 0, width, height),
-               fill=SCREENBACKGROUNDCOLOR
-               )
+image = show_background()
 
 #---------------------------------------------------------------------
-# divide the screen into two small, two medium and one large row
+# divide the screen:
+# 	 vertically into two small, two medium and one large row
+# 	 horizontally into two columns
+# all measurements are in pixels and optimized for 240x320 resolution
 #---------------------------------------------------------------------
-rowcount = 5
-rowtop = [0]*rowcount
-rowbottom = [0]*rowcount
+# establish the columns
 rowleftmargin = 10
 rowleftright = 115
 rowrightmargin = 125
 rowrightright = 230
-rowspace = 10
+# now do the rows
+ROWCOUNT = 5
+rowtop = [0]*ROWCOUNT
+rowbottom = [0]*ROWCOUNT
+rowspace = 10	# how many pixels between each section
+
 rowheight = [0]*5
+# set up each row hight
 rowheight[0] = 30
 rowheight[1] = 30
 rowheight[2] = 55
 rowheight[3] = 50
 rowheight[4] = 105
-rowtop[0] = 5
+# initialize the first row manually
+rowtop[0] = 5	# leave a 5 pixel border at the top
 rowbottom[0] = rowtop[0] + rowheight[0]
-for i in range(1, 5):
-    rowtop[i] = rowtop[i-1] + rowheight[i-1] + rowspace
+# now initialize the remaing rows
+for i in range(1, ROWCOUNT):
+    rowtop[i] = rowbottom[i-1] + rowspace
     rowbottom[i] = rowtop[i] + rowheight[i]
 
 #---------------------------------------------------------------------
+#  now create all the different graphs and position them on the screen
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
 # display the host name
+#  static, row zero, full width
 #---------------------------------------------------------------------
 hostname = socket.gethostname()
 hostnametb = TextBox(image, (rowleftmargin,rowtop[0]), (rowrightright, rowbottom[0]))
@@ -237,7 +242,8 @@ hostnametb.set_font_loc(DEFAULTFONTLOCATION)
 hostnametb.refresh()
 
 #---------------------------------------------------------------------
-# textbox with the IP addresses
+# textbox with the IP addresses\
+# static, row one, full width
 #---------------------------------------------------------------------
 IPs = getIPAddrs()
 iptb = TextBox(image, (rowleftmargin,rowtop[1]), (rowrightright, rowbottom[1]))
@@ -250,13 +256,13 @@ iptb.set_font_size(16)
 iptb.refresh()
 
 #---------------------------------------------------------------------
-# Bargraph with network and disk activity
+# Bargraph with network and disk activity 
+# dynamic, row two, full width
 #---------------------------------------------------------------------
 iobc = BarMulti(image,(rowleftmargin, rowtop[2]), (rowrightright, rowbottom[2]), 2)
 iobc.set_title("I/O")
 iobc.set_title_color(ImageColor.getrgb('black'))
 iobc.set_background_color(OBJBACKGROUNDCOLOR)
-#iobc.set_dial_color(ImageColor.getrgb("purple"))
 iobc.set_border_color(OBJBORDERCOLOR)
 iobc.set_text_color(ImageColor.getrgb("white"))
 iobc.set_text(("Network", 'Disk'))
@@ -267,7 +273,8 @@ iobc.set_gradient(True)
 iobc.set_barempty_color(ImageColor.getrgb("lightslategray"))
 
 #---------------------------------------------------------------------
-# gauge wtih the amount of virtual memory used
+# gauge wtih the amount of virtual memory used 
+# dynamic, row three, left side
 #---------------------------------------------------------------------
 perg = Gauge(image,(rowleftmargin,rowtop[3]), (rowleftright,rowbottom[3]))
 perg.set_title("Virtual Memory")
@@ -279,10 +286,9 @@ perg.set_font_loc(DEFAULTFONTLOCATION)
 perg.set_outline(GAUGEDIALCOLOR)
 perg.set_dialempty_color(ImageColor.getrgb("lightslategray"))
 
-
-
 #---------------------------------------------------------------------
-# gauge wtih CPU temperatur
+# gauge wtih CPU temperature 
+# dynamic, row three, right side
 #---------------------------------------------------------------------
 tempg = Gauge(image,(rowrightmargin,rowtop[3]), (rowrightright,rowbottom[3]))
 tempg.set_title("CPU Temp")
@@ -296,7 +302,8 @@ tempg.set_dialempty_color(ImageColor.getrgb("lightslategray"))
 
 
 #---------------------------------------------------------------------
-# dial for total CPU activity
+# dial for total CPU activity 
+# dynamic, row four, left side
 #---------------------------------------------------------------------
 cpud = Dial(image,(rowleftmargin, rowtop[4]), 105)
 cpud.set_title("CPU")
@@ -312,12 +319,12 @@ cpud.set_dialempty_color(ImageColor.getrgb("lightslategray"))
 
 #---------------------------------------------------------------------
 # bargraph with activity for individual CPU cores
+# dynamic, row four, right side
 #---------------------------------------------------------------------
 cpur = BarMulti(image,(rowrightmargin, rowtop[4]), (rowrightright, rowbottom[4]), 4)
 cpur.set_title("CPU Cores")
 cpur.set_title_color(ImageColor.getrgb('black'))
 cpur.set_background_color(OBJBACKGROUNDCOLOR)
-#cpur.set_dial_color(ImageColor.getrgb("purple"))
 cpur.set_border_color(OBJBORDERCOLOR)
 cpur.set_text_color(ImageColor.getrgb("white"))
 cpur.set_text(("I", 'II', 'III', 'IV'))
@@ -332,23 +339,28 @@ cpur.set_barempty_color(ImageColor.getrgb("lightslategray"))
 # now loop forever, each time displaying updated values
 #---------------------------------------------------------------------
 
-while 1:
+while True:
 
+# virtual memory
     virtualpercent = psutil.virtual_memory().percent 
     perg.set_percent(virtualpercent)
     perg.set_text(str(virtualpercent) + '%')
 
+# cpu Temperature
     cpu_temp = psutil.sensors_temperatures()["cpu_thermal"][0]
     tempg.set_percent(math.trunc(cpu_temp.current))
     tempg.set_text(str(math.trunc(cpu_temp.current))+"°C")
 
+# I/O bargraph
     calcIO()
     iobc.set_percent((net_percent, disk_percent))
 
+# amalgamated CPU
     cpupercent = psutil.cpu_percent(interval=UPDATEFREQUENCY) 
     cpud.set_percent(cpupercent)
     cpud.set_text(str(cpupercent)+"%")
 
+# individual CPU core activity
     rawcpumpercent = psutil.cpu_percent(interval=UPDATEFREQUENCY, percpu=True)
     cpumpercent = ()
     for i in range(0, len(rawcpumpercent)):  
@@ -359,26 +371,4 @@ while 1:
 
     sleep(UPDATEFREQUENCY)
 
-
-
-#---------------------------------------------------------------------
-# following code only for testing purposes
-#---------------------------------------------------------------------
-
-
-for cpupercent in range(0, 101, 10):
-    mygauges.mydial(image=image, 
-                     topleft=(50,190), 
-                     dialsize=120,
-                     percent=cpupercent ,
-                     text=str(cpupercent)+"%" ,
-                     title="CPU",
-                     backgroundcolor=OBJBACKGROUNDCOLOR,
-                     bordercolor=OBJBORDERCOLOR,
-                     textcolor=ImageColor.getrgb("green"),
-                     fontloc=DEFAULTFONTLOCATION,
-                     outline=ImageColor.getrgb("darkgreen"),
-                    )
-    sleep(1)
-    disp.image(image)
 
