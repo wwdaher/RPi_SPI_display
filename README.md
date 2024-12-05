@@ -28,6 +28,9 @@ Pin Configuration:
 
 For touch functionality:
 Add to /boot/firmware/config.txt: dtoverlay=spi1-1cs
+
+|Screen |GPIO | RPi pin |
+|-------|-----|---------|
 |T_CLK | GPIO21 | 40 |
 |T_CS | GPIO18 | 12 |
 |T_DIN | GPIO20 | 38 |
