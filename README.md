@@ -10,6 +10,17 @@ The core driver is monitorscreeno.py. The code to implement the various graph ob
 
 Ensure that SPI is enabled in raspi-config.
 
+## Install Instructions
+- sudo pip3 install Adafruit-blinka
+- sudo pip3 install netifaces
+- sudo pip3 install adafruit-circuitpython-rgb-display
+- git clone https://github.com/ilbertt/XPT2046-Python.git
+- copy xpt2046.py into working directory from XPT2046-Python created in previous step
+#### if running on a Raspberry Pi 5, do the following:
+- sudo apt remove python3-rpi.gpio
+- pip3 install rpi-lgpio
+- add dtoverlay=spi0-0cs to /boot/firmware/config.txt
+
 ## Pin Connection Configuration
 
 ### Display connection
