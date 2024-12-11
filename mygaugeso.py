@@ -754,7 +754,8 @@ class BarMulti:
 
 
         # calculate text size and position 
-        this._textfontsize = (this._barbottomright[0][1] - this._bartopleft[0][1]) / 2
+        this._textfontsize = int((this._barbottomright[0][1] - this._bartopleft[0][1]) / 2)
+        print(this._textfontsize)
         this._textfont = ImageFont.truetype(this._fontloc, this._textfontsize)
 
     

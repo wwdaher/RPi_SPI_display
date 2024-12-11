@@ -17,7 +17,10 @@ Ensure that SPI is enabled in raspi-config.
 - git clone https://github.com/ilbertt/XPT2046-Python.git
 - copy xpt2046.py into working directory from XPT2046-Python created in previous step
 #### if running on a Raspberry Pi 5, do the following:
+The libraries for RPi seem to be in flux as I had to try various combinations of this to get it to work on different RPi
+machines even though they were fresh builds.
 - sudo apt remove python3-rpi.gpio
+- sudo apt remove RPi.GPIO
 - pip3 install rpi-lgpio
 - add dtoverlay=spi0-0cs to /boot/firmware/config.txt
 
