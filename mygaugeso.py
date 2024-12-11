@@ -152,7 +152,7 @@ class Gauge:
             )
 
         # calculate text size and position 
-        this._textfontsize = (this._bottomright[0] - this._arctopleft[0]) // 8
+        this._textfontsize = int((this._bottomright[0] - this._arctopleft[0]) // 8)
         this._textfont = ImageFont.truetype(this._fontloc, this._textfontsize)
 
         this._textmiddlehorz = this._arctopleft[0] + ((this._bottomright[0] - this._arctopleft[0]) // 2)
@@ -340,7 +340,7 @@ class Dial:
                 this._draw.arc((innerarctopleft, innerarcbottomright), deg - 1, deg + 1, this._outline, 3,)
 
         # calculate text size and position 
-        this._textfontsize = (this._bottomright[0] - this._arctopleft[0]) // 6
+        this._textfontsize = int((this._bottomright[0] - this._arctopleft[0]) // 6)
         this._textfont = ImageFont.truetype(this._fontloc, this._textfontsize)
 
         this._textmiddlehorz = this._arctopleft[0] + ((this._arcbottomright[0] - this._arctopleft[0]) // 2)
@@ -551,7 +551,7 @@ class Bar:
 
 
         # calculate text size and position 
-        this._textfontsize = (this._graphbottomright[1] - this._graphtopleft[1]) / 2
+        this._textfontsize = int((this._graphbottomright[1] - this._graphtopleft[1]) / 2)
         this._textfont = ImageFont.truetype(this._fontloc, this._textfontsize)
 
         this._textmiddlehorz = this._graphtopleft[0] + ((this._graphbottomright[0] - this._graphtopleft[0]) // 2)
@@ -755,7 +755,6 @@ class BarMulti:
 
         # calculate text size and position 
         this._textfontsize = int((this._barbottomright[0][1] - this._bartopleft[0][1]) / 2)
-        print(this._textfontsize)
         this._textfont = ImageFont.truetype(this._fontloc, this._textfontsize)
 
     

@@ -36,7 +36,7 @@ machines even though they were fresh builds.
 |D/C | GPIO25 | 22 |
 |SDI (MOSI) | GPIO10 (MOSI) | 19 |
 |SCK | GPIO11 (SCLK) | 23 |
-|LED | 3.5V power | 1 |
+|LED | GPIO27 | 13 |
 |SDO(MISO) | GPIO9 (MISO) | 21 |
 
 ### Touch functionality:
