@@ -11,11 +11,12 @@
 # version:
 # 	0.0	2024/11/01
 #	1.0	2024/12/03	add monitorscreeno.ini support
+#	1.1	2024/12/12	add screen saver support
 # 	
 #---------------------------------------------------------------------
 import psutil, math, configparser, sys
 from random import randrange
-from time import sleep, time_ns
+from time import sleep, time_ns, time
 
 import digitalio, board, busio
 from PIL import Image, ImageDraw, ImageFont, ImageColor, ImageShow
@@ -52,6 +53,9 @@ DISK_MAXBYTES_PER_SECOND = int(config['default']['disk_maxbytes_per_second'])   
 
 BAUDRATE = int(config['default']['screen_baudrate'])
 
+SCREENTIMEOUT = int(config['default']['screen_timeout'])
+lastactivetime = time()
+visible = True
 #---------------------------------------------------------------------
 # set up default font
 #---------------------------------------------------------------------
@@ -158,6 +162,21 @@ else:
     width = disp.width  # we swap height/width to rotate it to landscape!
     height = disp.height
 
+ 
+
+#---------------------------------------------------------------------
+# the screensaver stuff 
+#---------------------------------------------------------------------
+def makevisible():
+	global visible
+	visible = True
+	led_pin.value = True
+
+def makeinvisible():
+	global visible
+	visible = False
+	led_pin.value = False
+
 
 #---------------------------------------------------------------------
 # now all the touch stuff
@@ -173,7 +192,10 @@ def touchscreen_press(x, y):
     #calc based on screen orientation
     realx = x;
     realy = disp.height - y
-    print(realx,realy)
+#    print(realx,realy)
+    global lastactivetime
+    lastactivetime = time()
+    makevisible()
 
 #SCLK_1 (GPIO21) 	<--> 	CLK
 #CE_1   (GPIO17)    <--> 	CS
@@ -193,6 +215,41 @@ xpt = Touch(spi, cs=cs, int_pin=irq, int_handler=touchscreen_press)
 #---------------------------------------------------------------------
 # end of touch stuff
 #---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# display updated values
+#---------------------------------------------------------------------
+def showdata():
+   # virtual memory
+       virtualpercent = psutil.virtual_memory().percent 
+       perg.set_percent(virtualpercent)
+       perg.set_text(str(virtualpercent) + '%')
+   
+   # cpu Temperature
+       cpu_temp = psutil.sensors_temperatures()["cpu_thermal"][0]
+       tempg.set_percent(math.trunc(cpu_temp.current))
+       tempg.set_text(str(math.trunc(cpu_temp.current))+"°C")
+   
+   # I/O bargraph
+       calcIO()
+       iobc.set_percent((net_percent, disk_percent))
+   
+   # amalgamated CPU
+       cpupercent = psutil.cpu_percent(interval=UPDATEFREQUENCY) 
+       cpud.set_percent(cpupercent)
+       cpud.set_text(str(cpupercent)+"%")
+   
+   # individual CPU core activity
+       rawcpumpercent = psutil.cpu_percent(interval=UPDATEFREQUENCY, percpu=True)
+       cpumpercent = ()
+       for i in range(0, len(rawcpumpercent)):  
+           cpumpercent = cpumpercent + (int(rawcpumpercent[i]),)
+       cpur.set_percent(cpumpercent)
+       image.putalpha(28)
+       disp.image(image)
+   
+       sleep(UPDATEFREQUENCY)
+
 
 image = show_background()
 
@@ -342,38 +399,19 @@ cpur.set_barempty_color(ImageColor.getrgb("lightslategray"))
 #---------------------------------------------------------------------
 # now loop forever, each time displaying updated values
 #---------------------------------------------------------------------
-
 while True:
-
-# virtual memory
-    virtualpercent = psutil.virtual_memory().percent 
-    perg.set_percent(virtualpercent)
-    perg.set_text(str(virtualpercent) + '%')
-
-# cpu Temperature
-    cpu_temp = psutil.sensors_temperatures()["cpu_thermal"][0]
-    tempg.set_percent(math.trunc(cpu_temp.current))
-    tempg.set_text(str(math.trunc(cpu_temp.current))+"°C")
-
-# I/O bargraph
-    calcIO()
-    iobc.set_percent((net_percent, disk_percent))
-
-# amalgamated CPU
-    cpupercent = psutil.cpu_percent(interval=UPDATEFREQUENCY) 
-    cpud.set_percent(cpupercent)
-    cpud.set_text(str(cpupercent)+"%")
-
-# individual CPU core activity
-    rawcpumpercent = psutil.cpu_percent(interval=UPDATEFREQUENCY, percpu=True)
-    cpumpercent = ()
-    for i in range(0, len(rawcpumpercent)):  
-        cpumpercent = cpumpercent + (int(rawcpumpercent[i]),)
-    cpur.set_percent(cpumpercent)
-    image.putalpha(28)
-    disp.image(image)
+    if not visible:
+        sleep(UPDATEFREQUENCY)
+        continue
+   
+    if (time() - lastactivetime) > SCREENTIMEOUT:
+        makeinvisible()
+        continue
+   
+    showdata()
 
     sleep(UPDATEFREQUENCY)
+
 
 
 
