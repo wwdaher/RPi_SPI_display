@@ -2,7 +2,8 @@
 Python code for SPI display for Raspberry Pi
 
 This turns a standard 2.4" TFT 320x240 display into a system activity
-monitor for a Raspberry Pi. Testing was done with "2.4 TFT SPI 240*320 V1.2", "JC2432S024"
+monitor for a Raspberry Pi. Testing was done with "2.4 TFT SPI 240*320 V1.2", "JC2432S024". The STL file to print a front panel to hold this display and fits into the Fractal Designs North Pi case is also included.
+
 
 This code requires the adafruit_rgb_display library with the ili9341 driver. Touch requires the xpt2046 library. Drawing is with the PIL library.
 
