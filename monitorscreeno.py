@@ -53,7 +53,12 @@ DISK_MAXBYTES_PER_SECOND = int(config['default']['disk_maxbytes_per_second'])   
 
 BAUDRATE = int(config['default']['screen_baudrate'])
 
-SCREENTIMEOUT = int(config['default']['screen_timeout'])
+SCREENTIMEOUT = config['default']['screen_timeout']
+if SCREENTIMEOUT == 'off':
+    screentimeoutoff = True
+else:
+    screentimeoutoff = False
+    SCREENTIMEOUT = int(SCREENTIMEOUT)
 lastactivetime = time()
 visible = True
 #---------------------------------------------------------------------
@@ -400,13 +405,14 @@ cpur.set_barempty_color(ImageColor.getrgb("lightslategray"))
 # now loop forever, each time displaying updated values
 #---------------------------------------------------------------------
 while True:
-    if not visible:
-        sleep(UPDATEFREQUENCY)
-        continue
+    if not screentimeoutoff:
+        if not visible:
+            sleep(UPDATEFREQUENCY)
+            continue
    
-    if (time() - lastactivetime) > SCREENTIMEOUT:
-        makeinvisible()
-        continue
+        if (time() - lastactivetime) > SCREENTIMEOUT:
+            makeinvisible()
+            continue
    
     showdata()
 
