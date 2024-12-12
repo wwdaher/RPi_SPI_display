@@ -132,6 +132,10 @@ cs_pin = digitalio.DigitalInOut(board.CE0)
 dc_pin = digitalio.DigitalInOut(board.D25)
 reset_pin = digitalio.DigitalInOut(board.D24)
 
+led_pin = digitalio.DigitalInOut(board.D27)
+led_pin.direction = digitalio.Direction.OUTPUT
+led_pin.value = True
+
 # Setup SPI bus using hardware SPI:
 spi = board.SPI()
 
@@ -370,5 +374,6 @@ while True:
     disp.image(image)
 
     sleep(UPDATEFREQUENCY)
+
 
 

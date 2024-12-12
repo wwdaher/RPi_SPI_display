@@ -2,7 +2,8 @@
 Python code for SPI display for Raspberry Pi
 
 This turns a standard 2.4" TFT 320x240 display into a system activity
-monitor for a Raspberry Pi. Testing was done with "2.4 TFT SPI 240*320 V1.2", "JC2432S024"
+monitor for a Raspberry Pi. Testing was done with "2.4 TFT SPI 240*320 V1.2", "JC2432S024". The STL file to print a front panel to hold this display and fits into the Fractal Designs North Pi case is also included.
+
 
 This code requires the adafruit_rgb_display library with the ili9341 driver. Touch requires the xpt2046 library. Drawing is with the PIL library.
 
@@ -17,7 +18,10 @@ Ensure that SPI is enabled in raspi-config.
 - git clone https://github.com/ilbertt/XPT2046-Python.git
 - copy xpt2046.py into working directory from XPT2046-Python created in previous step
 #### if running on a Raspberry Pi 5, do the following:
+The libraries for RPi seem to be in flux as I had to try various combinations of this to get it to work on different RPi
+machines even though they were fresh builds.
 - sudo apt remove python3-rpi.gpio
+- sudo apt remove RPi.GPIO
 - pip3 install rpi-lgpio
 - add dtoverlay=spi0-0cs to /boot/firmware/config.txt
 
@@ -33,7 +37,7 @@ Ensure that SPI is enabled in raspi-config.
 |D/C | GPIO25 | 22 |
 |SDI (MOSI) | GPIO10 (MOSI) | 19 |
 |SCK | GPIO11 (SCLK) | 23 |
-|LED | 3.5V power | 1 |
+|LED | GPIO27 | 13 |
 |SDO(MISO) | GPIO9 (MISO) | 21 |
 
 ### Touch functionality:
