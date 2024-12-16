@@ -7,7 +7,7 @@ monitor for a Raspberry Pi. Testing was done with "2.4 TFT SPI 240*320 V1.2", "J
 
 This code requires the adafruit_rgb_display library with the ili9341 driver. Touch requires the xpt2046 library. Drawing is with the PIL library.
 
-The core driver is monitorscreeno.py. The code to implement the various graph objects is in mygaugeso.py.
+The core driver is monitorscreen.py. The code to implement the various graph objects is in graphicobjects.py.
 
 Ensure that SPI is enabled in raspi-config.
 
