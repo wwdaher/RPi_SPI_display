@@ -27,13 +27,13 @@ from gpiozero import Button, DigitalOutputDevice
 import socket
 from netifaces import interfaces, ifaddresses, AF_INET
 
-from mygaugeso import Bar, TextBox, Dial, Gauge, BarMulti
+from graphicobjects import Bar, TextBox, Dial, Gauge, BarMulti
 
 #---------------------------------------------------------------------
 # read the config file
 #---------------------------------------------------------------------
 config = configparser.ConfigParser()
-config.read('monitorscreeno.ini')
+config.read('monitorscreen.ini')
 SCREENBACKGROUNDCOLOR = ImageColor.getrgb(config['default']['screenbackgroundcolor'])
 try:
 	SCREENBACKGROUNDIMAGE = config['default']['screenbackgroundimage']
