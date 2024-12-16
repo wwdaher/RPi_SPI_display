@@ -27,7 +27,7 @@ from gpiozero import Button, DigitalOutputDevice
 import socket
 from netifaces import interfaces, ifaddresses, AF_INET
 
-from graphicobjects import Bar, TextBox, Dial, Gauge, BarMulti
+from graphicobjects import Bar, TextBox, Dial, Gauge
 
 #---------------------------------------------------------------------
 # read the config file
@@ -325,7 +325,7 @@ iptb.refresh()
 # Bargraph with network and disk activity 
 # dynamic, row two, full width
 #---------------------------------------------------------------------
-iobc = BarMulti(image,(rowleftmargin, rowtop[2]), (rowrightright, rowbottom[2]), 2)
+iobc = Bar(image,(rowleftmargin, rowtop[2]), (rowrightright, rowbottom[2]), 2)
 iobc.set_title("I/O")
 iobc.set_title_color(ImageColor.getrgb('black'))
 iobc.set_background_color(OBJBACKGROUNDCOLOR)
@@ -387,7 +387,7 @@ cpud.set_dialempty_color(ImageColor.getrgb("lightslategray"))
 # bargraph with activity for individual CPU cores
 # dynamic, row four, right side
 #---------------------------------------------------------------------
-cpur = BarMulti(image,(rowrightmargin, rowtop[4]), (rowrightright, rowbottom[4]), 4)
+cpur = Bar(image,(rowrightmargin, rowtop[4]), (rowrightright, rowbottom[4]), 4)
 cpur.set_title("CPU Cores")
 cpur.set_title_color(ImageColor.getrgb('black'))
 cpur.set_background_color(OBJBACKGROUNDCOLOR)
