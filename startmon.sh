@@ -1,6 +1,6 @@
 #!/bin/bash
 
-startcommand="python3 monitorscreeno.py"
+startcommand="python3 monitorscreen.py"
 
 if pgrep -f "$startcommand" > /dev/null
 then
