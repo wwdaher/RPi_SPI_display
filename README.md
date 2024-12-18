@@ -63,4 +63,5 @@ Add the following to /boot/firmware/config.txt:
 |T_DO | GPIO19 | 35 | 
 |T_IRQ | GPIO26 | 37 |
 
-
+### Start Script
+Change the location of the code in startmon.sh.
